@@ -44,7 +44,7 @@ jobs:
       - name: go test
         run: go test -race ./...
 
-  # Checks that the image still builds. Publishing happens only in release.yml, from a tag.
+  # Build check only, nothing is pushed.
   image:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest

@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# The build stage runs on the builder's own platform and cross-compiles, so multi-arch
-# images build without emulation.
+# Cross-compiles on the builder's platform, so multi-arch builds need no emulation.
 FROM --platform=$BUILDPLATFORM golang:1.27 AS build
 WORKDIR /src
 COPY go.mod go.sum ./

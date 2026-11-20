@@ -16,7 +16,7 @@ resources:
 images:
   - name: thehackerdispatch
     newName: ghcr.io/maclovin/thehackerdispatch
-    newTag: 0.1.0  # a release tag published by .github/workflows/release.yml (git tag v0.1.0)
+    newTag: 0.1.0  # release version, without the v
 
 configMapGenerator:
   - name: thehackerdispatch-config

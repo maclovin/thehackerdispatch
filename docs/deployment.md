@@ -8,9 +8,10 @@ The only required infrastructure is one PostgreSQL 16+ database. The app ships a
 
 Versions follow [semantic versioning](https://semver.org) and come only from git tags. Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which:
 
-1. runs the tests;
-2. builds the image for `linux/amd64` and `linux/arm64` and pushes it to `ghcr.io/maclovin/thehackerdispatch`;
-3. creates the GitHub release, with notes generated from the merged pull requests and the image name.
+1. checks that the tag is a new version (see below);
+2. runs the tests;
+3. builds the image for `linux/amd64` and `linux/arm64` and pushes it to `ghcr.io/maclovin/thehackerdispatch`;
+4. creates the GitHub release, with notes generated from the merged pull requests and the image name.
 
 | Tag | Image tags | GitHub release |
 |---|---|---|
@@ -19,14 +20,15 @@ Versions follow [semantic versioning](https://semver.org) and come only from git
 
 Nothing else publishes: pushes to `main` and pull requests only run the tests and check that the image builds.
 
-To release, tag a commit on `main` that passed CI:
+To release, create a new tag (e.g. `v1.2.3`) on a commit of `main` that passed CI, in the GitHub UI or with `git tag v1.2.3 && git push origin v1.2.3`. The workflow creates the release, with generated notes and the image name. If a release for that tag already exists, it only adds the image line to its notes.
 
-```sh
-git tag v1.2.3
-git push origin v1.2.3
-```
+The workflow stops without publishing an image if:
 
-Creating the release in the GitHub UI with a new tag works too: the workflow sees that the release exists and only adds the image line to its notes.
+- the tag isn't a version (`vX.Y.Z` or `vX.Y.Z-suffix`);
+- an image for that version is already in GHCR. Published versions are never overwritten;
+- the tests or the image build fail.
+
+When it stops, a release that already exists for the tag goes back to **draft**, so no published release lacks its image. Fix the problem and create a new tag (e.g. `v1.2.4`).
 
 The version is built into the binary: `thehackerdispatch version`, `/healthz`, and the startup log all report it.
 

@@ -26,6 +26,8 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
+Creating the release in the GitHub UI with a new tag works too: the workflow sees that the release exists and only adds the image line to its notes.
+
 The version is built into the binary: `thehackerdispatch version`, `/healthz`, and the startup log all report it.
 
 Deploy exact version tags (`1.2.3`), not `1.2` or `latest`. The Deployment doesn't set `imagePullPolicy`, so a node that already has a moving tag cached keeps running the old image.

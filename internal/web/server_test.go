@@ -159,6 +159,17 @@ func TestReadyz(t *testing.T) {
 	}
 }
 
+func TestReadyzFailsWhileDraining(t *testing.T) {
+	srv, err := NewServer(Deps{Logger: discard})
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv.Drain()
+	if rec := get(t, srv.HealthHandler(), "/readyz"); rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503", rec.Code)
+	}
+}
+
 func TestHealthHandlerServesOnlyHealth(t *testing.T) {
 	srv := newTestServer(t)
 	if rec := get(t, srv.HealthHandler(), "/login"); rec.Code != http.StatusNotFound {

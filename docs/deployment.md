@@ -99,10 +99,54 @@ Then continue with [Getting started](getting-started.md).
 
 To change a value later, edit `config.env` or `secrets.env` and run `kubectl apply -k` again. Kustomize adds a hash of the contents to the ConfigMap and Secret names, so the pods restart with the new values on their own.
 
+### Secrets from an external manager
+
+The app reads its secrets from environment variables, filled from a Kubernetes Secret. Any tool that keeps that Secret in sync works: [External Secrets Operator](https://external-secrets.io) (OpenBao, Vault, AWS, GCP, Azure, and others), or the Secrets Store CSI Driver with Secret sync.
+
+With ESO:
+
+1. Remove the `secretGenerator` from the overlay's `kustomization.yaml`, and `secrets.env` with it.
+2. Create an `ExternalSecret` whose target is a Secret named `thehackerdispatch-secrets`, with the same keys as `secrets.env.example`:
+
+   ```yaml
+   apiVersion: external-secrets.io/v1
+   kind: ExternalSecret
+   metadata:
+     name: thehackerdispatch-secrets
+     namespace: thehackerdispatch
+   spec:
+     refreshInterval: 1h
+     secretStoreRef:
+       kind: ClusterSecretStore
+       name: openbao              # your store
+     target:
+       name: thehackerdispatch-secrets
+     dataFrom:
+       - extract:
+           key: thehackerdispatch # path in OpenBao/Vault holding DATABASE_URL, SECRETS_KEY, ...
+   ```
+
+3. Restart the pods when the Secret changes. Environment variables are read only at startup, so a resync that changes a value has no effect until then. [Reloader](https://github.com/stakater/Reloader) does it: install it and annotate the Deployment:
+
+   ```yaml
+   metadata:
+     annotations:
+       secret.reloader.stakater.com/reload: "thehackerdispatch-secrets"
+   ```
+
+A resync then causes no downtime:
+
+- the Deployment starts the new pod and waits until it is ready before stopping the old one (`maxUnavailable: 0`);
+- if the new values are wrong (bad `DATABASE_URL`, invalid `SECRETS_KEY`), the new pod never becomes ready and the old one keeps serving. `kubectl rollout status` shows the stuck rollout;
+- the old pod stops cleanly: it fails `/readyz`, waits 5s for Kubernetes to stop routing to it, then drains its connections.
+
+> **Don't rotate `SECRETS_KEY`.** It encrypts the LLM API keys stored in the database. If a resync changes it, the new pod starts fine but can no longer decrypt those keys: curation and writing fail until the keys are entered again in the panel. Rotate the other secrets freely.
+
 ## Operations
 
 - **Probes:** liveness on `/healthz` (the process is up); readiness on `/readyz` (the database is reachable and migrations have run).
-- **Shutdown:** on `SIGTERM` the process stops taking new jobs, finishes the current ones, and drains HTTP connections, within the default 30s grace period.
+- **Shutdown:** on `SIGTERM` the process stops taking new jobs, fails `/readyz`, waits 5s so Kubernetes stops routing to it, then drains HTTP connections, all within the default 30s grace period.
+- **Rollouts:** `maxUnavailable: 0`, so a restart (new release, changed config or secret) keeps the old pod serving until the new one is ready.
 - **Security context:** `runAsNonRoot`, all capabilities dropped, no privilege escalation. The root filesystem stays writable because the master password file lives in `/tmp`.
 - **Resources:** small defaults (100m CPU, 128Mi, up to 512Mi). Concurrent password checks are capped, so memory stays predictable.
 - **Scaling:** 1 replica by default. More replicas are safe: background jobs and migrations run under Postgres advisory locks. The `web` mode scales horizontally; see [run modes](architecture.md#run-modes).

@@ -1,0 +1,25 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+<h1>Stories <span class="meta">(on the board now)</span></h1>
+{{with .Content -}}
+{{if not .Stories -}}
+<p class="empty">No stories on the board.</p>
+{{- else -}}
+<table class="admin">
+  <thead><tr><th>Story</th><th>Section</th><th>Published</th><th>Comments</th><th></th></tr></thead>
+  <tbody>
+    {{range .Stories -}}
+    <tr>
+      <td>{{if .Critical}}<span class="badge">critical</span> {{end}}<a href="/s/{{.ID}}">{{.Title}}</a>{{with .Domain}}<div class="meta">{{.}}</div>{{end}}</td>
+      <td>{{.Section}}</td>
+      <td>{{since .PublishedAt}}</td>
+      <td>{{.Comments}}</td>
+      <td><button class="link" type="button" hx-post="/admin/stories/{{.ID}}/delete"
+          hx-confirm="Delete this story and its whole discussion?">delete</button></td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{- end}}
+{{- end}}

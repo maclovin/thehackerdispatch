@@ -1,0 +1,42 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>Section: {{.Section.Name}}</h1>
+<p class="meta">slug <code>{{.Section.Slug}}</code> | {{.Section.Sources}} sources | {{.Section.Stories}} stories | <a href="/admin/sections">all sections</a></p>
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked" method="post" action="/admin/sections/{{.Section.ID}}">
+  <label>Name <input type="text" name="name" value="{{.Name}}" maxlength="40" required></label>
+  <div class="buttons"><button type="submit">Rename</button></div>
+</form>
+
+<h2>Slack alerts</h2>
+{{if .Channels -}}
+<form class="stacked" method="post" action="/admin/sections/{{.Section.ID}}/channel">
+  <label>Notification channel <span class="meta">gets one message per story published in this section</span>
+    <select name="channel_id">
+      <option value="0">none</option>
+      {{$current := .Section.ChannelID}}
+      {{range .Channels}}<option value="{{.ID}}"{{if and $current (eq .ID (deref $current))}} selected{{end}}>{{.Name}} ({{.SlackChannel}})</option>{{end}}
+    </select>
+  </label>
+  <div class="buttons"><button type="submit">Save</button></div>
+</form>
+{{- else -}}
+<p class="meta">No notification channels yet. <a href="/admin/channels">Add one</a> to send this section's stories to Slack.</p>
+{{- end}}
+
+<h2>Section prompt</h2>
+<p class="meta">Comes after the fixed part and the <a href="/admin/prompt">global prompt</a>. It is used to curate the items from this section's sources and to write the stories in this section. Leave it empty to use only the global prompt.</p>
+{{template "prompt_editor" .Editor}}
+
+<h2>Delete</h2>
+{{if or .Section.Sources .Section.Stories -}}
+<p class="meta">Only an empty section can be deleted. Move its sources to another section first; its stories go away when they expire, or when an admin deletes them.</p>
+{{- else -}}
+<div class="buttons">
+  <button type="button" class="danger" hx-post="/admin/sections/{{.Section.ID}}/delete"
+          hx-confirm="Delete the section {{.Section.Name}} and its prompt?">Delete section</button>
+</div>
+{{- end}}
+{{- end}}
+{{- end}}

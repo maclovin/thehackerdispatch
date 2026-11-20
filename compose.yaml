@@ -1,0 +1,38 @@
+# Local development: `docker compose up --build`, then open http://localhost:8080.
+# Read the master password with: docker compose exec app /thehackerdispatch master-password
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: thehacker
+      POSTGRES_PASSWORD: dispatch
+      POSTGRES_DB: thehackerdispatch
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thehacker -d thehackerdispatch"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      args:
+        VERSION: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://thehacker:dispatch@db:5432/thehackerdispatch?sslmode=disable
+      BASE_URL: http://localhost:8080
+      # Development-only key. Generate a real one with: openssl rand -base64 32
+      SECRETS_KEY: ZGV2LW9ubHkta2V5LWRvLW5vdC11c2UtaW4tcHJvZCE=
+      LOG_LEVEL: debug
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:

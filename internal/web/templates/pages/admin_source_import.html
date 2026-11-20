@@ -1,0 +1,28 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>Import sources</h1>
+{{with .Result -}}
+<p class="notice ok" role="status">{{len .Added}} added, {{len .Skipped}} already there, {{len .Invalid}} invalid.</p>
+{{with .Invalid}}<h2>Invalid</h2><ul class="plain">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+{{with .Added}}<h2>Added</h2><ul class="plain">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+{{with .Skipped}}<h2>Already there</h2><ul class="plain">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<p><a href="/admin/sources">Back to sources</a></p>
+{{- else -}}
+<p>Upload an OPML file: the format every feed reader uses to export its subscriptions. The repository's <code>docs/sources.opml</code> is a ready-made catalog.</p>
+<p class="meta">A feed whose group in the file is named like a section (e.g. "Security") goes to that section; the rest go to the section picked below. Feeds whose URL is already a source are skipped.</p>
+{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+<form class="stacked" method="post" action="/admin/sources/import" enctype="multipart/form-data">
+  <label>OPML file <input type="file" name="opml" accept=".opml,.xml,text/xml,application/xml" required></label>
+  <label>Section for feeds outside a matching group
+    <select name="section_id" required>
+      {{$selected := .SectionID}}
+      {{range .Sections}}<option value="{{.ID}}"{{if eq .ID $selected}} selected{{end}}>{{.Name}}</option>{{end}}
+    </select>
+  </label>
+  <label class="check"><input type="checkbox" name="enabled"{{if .Enabled}} checked{{end}}> Enable the new sources right away</label>
+  <div class="buttons"><button class="primary" type="submit">Import</button></div>
+</form>
+{{- end}}
+{{- end}}
+{{- end}}

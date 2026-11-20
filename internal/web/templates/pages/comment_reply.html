@@ -1,0 +1,11 @@
+{{define "content" -}}
+{{with .Content -}}
+<p class="meta"><a href="/s/{{.StoryID}}#c{{.Comment.ID}}">back to the discussion</a></p>
+<ul class="comments">{{template "comment" .Comment}}</ul>
+<form class="stacked" method="post" action="/s/{{.StoryID}}/comments">
+  <input type="hidden" name="parent" value="{{.Comment.ID}}">
+  <textarea name="body" required maxlength="5000" aria-label="Your reply" autofocus></textarea>
+  <div class="buttons"><button class="primary" type="submit">Reply</button></div>
+</form>
+{{- end}}
+{{- end}}

@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: thehackerdispatch
+spec:
+  # ingressClassName: nginx
+  # tls:
+  #   - hosts: [news.example.com]
+  #     secretName: thehackerdispatch-tls
+  rules:
+    - host: news.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: thehackerdispatch
+                port:
+                  name: http

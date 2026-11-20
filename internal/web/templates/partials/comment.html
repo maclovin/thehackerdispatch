@@ -1,0 +1,21 @@
+{{define "comment" -}}
+<li class="comment{{if .Deleted}} deleted{{end}}" id="c{{.ID}}">
+  <div class="head">
+    {{template "vote" .Vote}}
+    <span class="meta">{{if .Deleted}}[deleted]{{else}}{{.Author}}{{end}} | <a href="#c{{.ID}}">{{since .CreatedAt}}</a>{{if .Edited}} | edited{{end}}</span>
+  </div>
+  <div class="body">{{if .Deleted}}[deleted]{{else}}{{.Body}}{{end}}</div>
+  {{if not .Deleted -}}
+  <div class="actions">
+    <a href="/c/{{.ID}}/reply">reply</a>
+    {{if .CanEdit}}<a href="/c/{{.ID}}/edit">edit</a>{{end}}
+    {{if .CanDelete}}<button class="link" type="button" hx-post="/c/{{.ID}}/delete" hx-confirm="Delete this comment?">delete</button>{{end}}
+  </div>
+  {{- end}}
+  {{with .Replies -}}
+  <ul class="replies">
+    {{range .}}{{template "comment" .}}{{end}}
+  </ul>
+  {{- end}}
+</li>
+{{- end}}

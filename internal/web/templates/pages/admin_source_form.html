@@ -1,0 +1,37 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>{{if .ID}}Edit source{{else}}Add source{{end}}</h1>
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+{{with .Source}}<p class="meta">Last fetch {{ago .LastFetchAt}}{{with .LastStatus}}: {{.}}{{end}}</p>{{end}}
+<form class="stacked" method="post" action="{{if .ID}}/admin/sources/{{.ID}}{{else}}/admin/sources{{end}}">
+  <label>Name
+    <input type="text" name="name" value="{{.Input.Name}}" maxlength="100" required>
+  </label>
+  <label>Feed URL (RSS or Atom)
+    <input type="url" name="url" value="{{.Input.URL}}" required>
+  </label>
+  <label>Section
+    <select name="section_id" required>
+      {{$selected := .Input.SectionID}}
+      {{range .Sections}}<option value="{{.ID}}"{{if eq .ID $selected}} selected{{end}}>{{.Name}}</option>{{end}}
+    </select>
+  </label>
+  <label>User-Agent <span class="meta">(leave empty for the default; some sites only answer browsers)</span>
+    <input type="text" name="user_agent" value="{{.Input.UserAgent}}" maxlength="300">
+  </label>
+  <label class="check"><input type="checkbox" name="enabled"{{if .Input.Enabled}} checked{{end}}> Enabled</label>
+  <div class="buttons">
+    <button type="submit">Save</button>
+    <button type="button" hx-post="/admin/sources/test" hx-include="closest form" hx-target="#preview"
+            hx-indicator="#testing">Test feed</button>
+    <span id="testing" class="htmx-indicator meta">fetching…</span>
+    {{if .ID}}
+    <button type="button" class="danger" hx-post="/admin/sources/{{.ID}}/delete"
+            hx-confirm="Delete this source? Its pending items are deleted too.">Delete</button>
+    {{end}}
+  </div>
+</form>
+<div id="preview"></div>
+{{- end}}
+{{- end}}

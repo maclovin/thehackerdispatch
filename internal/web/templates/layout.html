@@ -1,0 +1,39 @@
+{{define "layout" -}}
+<!doctype html>
+<html lang="en"{{with .Theme}} data-theme="{{.}}"{{end}}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{/* htmx would otherwise inject an inline <style>, which the CSP blocks. */ -}}
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
+  <title>{{with .Title}}{{.}} | {{end}}{{.Brand.DisplayName}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/theme.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="/">{{.Brand.DisplayName}}</a>
+      {{with .User -}}
+      <nav>
+        <a href="/account">{{if .Nickname}}{{.Nickname}}{{else}}account{{end}}</a>
+        {{if .IsAdmin}}<a href="/admin">admin panel</a>{{end}}
+        <form class="inline" method="post" action="/logout"><button class="link" type="submit">logout</button></form>
+      </nav>
+      {{- end}}
+    </header>
+    <main>
+      {{template "content" .}}
+    </main>
+    <footer class="footer">
+      {{if .TTLDays -}}
+      Everything here (stories, threads and votes) disappears {{if eq .TTLDays 1}}1 day{{else}}{{.TTLDays}} days{{end}} after it's published. The board keeps starting fresh.
+      {{- else -}}
+      Stories and threads here don't expire.
+      {{- end}}
+    </footer>
+  </div>
+</body>
+</html>
+{{- end}}

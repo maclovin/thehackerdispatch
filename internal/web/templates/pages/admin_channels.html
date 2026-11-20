@@ -1,0 +1,50 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+<h1>Notification channels</h1>
+{{with .Content -}}
+{{if not .SlackEnabled -}}
+<p class="notice" role="status">SLACK_BOT_TOKEN isn't set, so nothing is sent to Slack. Set it in the app's environment and restart.</p>
+{{- end}}
+<p class="meta">Each section points to one of these channels, or to none, on <a href="/admin/sections">its page</a>. Every story published in the section gets one message there, and its updates a reply in that message's thread. Messages are never deleted. Invite the Slack app to each channel.</p>
+{{if not .Channels -}}
+<p class="empty">No notification channels yet.</p>
+{{- else -}}
+<table class="admin">
+  <thead>
+    <tr><th>Name</th><th>Slack channel</th><th>Sections</th><th>Last message</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{range .Channels -}}
+    <tr>
+      <td><a href="/admin/channels/{{.ID}}">{{.Name}}</a></td>
+      <td><code>{{.SlackChannel}}</code></td>
+      <td>{{range $i, $s := .Sections}}{{if $i}}, {{end}}{{$s}}{{else}}<span class="meta">none</span>{{end}}</td>
+      <td>{{if eq .LastStatus "sent"}}sent{{else if eq .LastStatus "pending"}}<span class="error">failing, retrying:</span>{{else if .LastStatus}}<span class="error">failed:</span>{{end}}
+        {{- if .LastError}} {{.LastError}}{{end}}
+        {{- if .LastAt}} <span class="meta">{{ago .LastAt}}</span>{{else}}<span class="meta">none yet</span>{{end}}</td>
+      <td class="buttons">
+        <button class="link" type="button" hx-post="/admin/channels/{{.ID}}/test" hx-target="#test-{{.ID}}" hx-indicator="#test-{{.ID}}">send a test</button>
+        <button class="link" type="button" hx-post="/admin/channels/{{.ID}}/delete" hx-confirm="Delete the notification channel {{.Name}}? Its sections stop sending alerts.">delete</button>
+        <span id="test-{{.ID}}"><span class="htmx-indicator meta">sending…</span></span>
+      </td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+
+<h2>Add a notification channel</h2>
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked" method="post" action="/admin/channels">
+  <div class="row">
+    <label>Name <span class="meta">shown in this panel</span>
+      <input type="text" name="name" value="{{.Input.Name}}" maxlength="40" required>
+    </label>
+    <label>Slack channel <span class="meta">a name like #sec-news, or a channel ID like C0123456789</span>
+      <input type="text" name="slack_channel" value="{{.Input.SlackChannel}}" maxlength="81" required>
+    </label>
+  </div>
+  <div class="buttons"><button class="primary" type="submit">Add channel</button></div>
+</form>
+{{- end}}
+{{- end}}

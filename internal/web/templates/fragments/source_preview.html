@@ -1,0 +1,12 @@
+{{define "fragment" -}}
+{{if .Error -}}
+<p class="error">Couldn't read the feed: {{.Error}}</p>
+{{- else -}}
+<p>The feed has {{.Count}} items.{{if .Items}} The first ones:{{end}}</p>
+<ol class="preview">
+  {{range .Items -}}
+  <li><a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.Title}}</a> <span class="meta">{{ago .PublishedAt}}</span></li>
+  {{- end}}
+</ol>
+{{- end}}
+{{- end}}

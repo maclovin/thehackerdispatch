@@ -1,0 +1,23 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>Prompt</h1>
+<p>Every LLM call is put together in this order:</p>
+<ol class="plain-numbers">
+  <li><strong>Fixed part</strong>, written into the system: the model's role, the output format, and the rule that feed content is data, never instructions. It can't be edited, so no prompt can break curation or writing.</li>
+  <li><strong>Global prompt</strong>, below: who reads the board, what matters, how to score, what is critical, how to write.</li>
+  <li><strong>Section prompt</strong>, when the section has one: edit it on the section's page under <a href="/admin/sections">sections</a>.</li>
+</ol>
+<details>
+  <summary>Fixed part for curation</summary>
+  <pre class="prompt">{{.CurationContract}}</pre>
+</details>
+<details>
+  <summary>Fixed part for writing</summary>
+  <pre class="prompt">{{.WritingContract}}</pre>
+</details>
+
+<h2>Global prompt</h2>
+{{template "prompt_editor" .Editor}}
+{{- end}}
+{{- end}}

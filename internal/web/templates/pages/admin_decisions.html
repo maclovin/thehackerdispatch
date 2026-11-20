@@ -1,0 +1,26 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+<h1>Recent decisions <span class="meta">(feed items from the last 48 hours)</span></h1>
+{{with .Content -}}
+{{if not .Rows -}}
+<p class="empty">Nothing yet. Items appear here after the sources are fetched.</p>
+{{- else -}}
+<table class="admin">
+  <thead><tr><th>Fetched</th><th>Item</th><th>Decision</th><th>Reason</th></tr></thead>
+  <tbody>
+    {{range .Rows -}}
+    <tr>
+      <td class="meta">{{since .FetchedAt}}</td>
+      <td><a href="{{.URL}}" rel="noopener noreferrer">{{.Title}}</a><div class="meta">{{.Source}}</div></td>
+      <td>
+        {{if eq .Status "pending"}}<span class="meta">pending</span>
+        {{else}}{{.Decision}}{{with .StoryID}} (<a href="/s/{{.}}">story</a>){{end}}{{end}}
+      </td>
+      <td>{{.Reason}}</td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{- end}}
+{{- end}}

@@ -1,0 +1,24 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>Notification channel: {{.Channel.Name}}</h1>
+<p class="meta">Sections: {{range $i, $s := .Channel.Sections}}{{if $i}}, {{end}}{{$s}}{{else}}none{{end}} | <a href="/admin/channels">all channels</a></p>
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked" method="post" action="/admin/channels/{{.Channel.ID}}">
+  <div class="row">
+    <label>Name <input type="text" name="name" value="{{.Input.Name}}" maxlength="40" required></label>
+    <label>Slack channel <span class="meta">a name like #sec-news, or a channel ID like C0123456789</span>
+      <input type="text" name="slack_channel" value="{{.Input.SlackChannel}}" maxlength="81" required>
+    </label>
+  </div>
+  <p class="meta">New alerts go to the new Slack channel. Updates of stories already alerted still reply in their original thread.</p>
+  <div class="buttons"><button class="primary" type="submit">Save</button></div>
+</form>
+
+<h2>Delete</h2>
+<div class="buttons">
+  <button type="button" class="danger" hx-post="/admin/channels/{{.Channel.ID}}/delete"
+          hx-confirm="Delete the notification channel {{.Channel.Name}}? Its sections stop sending alerts.">Delete channel</button>
+</div>
+{{- end}}
+{{- end}}

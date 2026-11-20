@@ -1,0 +1,40 @@
+{{define "content" -}}
+{{with .Content -}}
+<div class="columns">
+  <aside class="sidebar">
+    <form method="get" action="/">
+      <input type="hidden" name="filter" value="1">
+      <h3>Sections</h3>
+      <ul>
+        {{range .Sections}}<li><label><input type="checkbox" name="sections" value="{{.Slug}}"{{if .Checked}} checked{{end}}> {{.Name}}</label></li>{{end}}
+      </ul>
+      <button type="submit">Apply</button>
+    </form>
+  </aside>
+  <section>
+    {{if not .Stories -}}
+    <p class="empty">{{if .Filtered}}Nothing in these sections right now.{{else}}No stories yet. They show up here as the sources are curated.{{end}}</p>
+    {{- else -}}
+    <ol class="stories">
+      {{range $i, $s := .Stories -}}
+      <li>
+        <span class="rank">{{add $i 1}}.</span>
+        <div>
+          <div class="title">
+            {{if .Critical}}<span class="badge">critical</span> {{end}}<a href="/s/{{.ID}}">{{.Title}}</a>
+            {{if .URL}}<span class="meta">(<a href="{{.URL}}" rel="noopener noreferrer">{{.Domain}}</a>)</span>{{end}}
+          </div>
+          <div class="meta">
+            {{.Section}} | {{since .PublishedAt}}{{if gt .Sources 1}} | {{.Sources}} sources{{end}}
+            | <a href="/s/{{.ID}}#comments">{{if eq .Comments 0}}discuss{{else if eq .Comments 1}}1 comment{{else}}{{.Comments}} comments{{end}}</a>
+            | {{expiresIn .ExpiresAt}}
+          </div>
+        </div>
+      </li>
+      {{- end}}
+    </ol>
+    {{- end}}
+  </section>
+</div>
+{{- end}}
+{{- end}}

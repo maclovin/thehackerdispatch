@@ -1,0 +1,29 @@
+# Example environment. Copy this directory, then:
+#   1. set the image below and the host in ingress.yaml;
+#   2. fill in config.env (non-secret settings);
+#   3. cp secrets.env.example secrets.env and fill it in (secrets.env stays out of git);
+#   4. kubectl apply -k <this directory>
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: thehackerdispatch
+
+resources:
+  - namespace.yaml
+  - ../../base
+  - ingress.yaml
+
+images:
+  - name: thehackerdispatch
+    newName: ghcr.io/maclovin/thehackerdispatch
+    newTag: 0.1.0  # a release tag published by .github/workflows/release.yml (git tag v0.1.0)
+
+configMapGenerator:
+  - name: thehackerdispatch-config
+    envs:
+      - config.env
+
+secretGenerator:
+  - name: thehackerdispatch-secrets
+    envs:
+      - secrets.env

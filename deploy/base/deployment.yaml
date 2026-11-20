@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thehackerdispatch
+  labels:
+    app.kubernetes.io/name: thehackerdispatch
+spec:
+  # One replica runs everything (--mode=all). More replicas are safe: background jobs and
+  # migrations are guarded by PostgreSQL advisory locks.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: thehackerdispatch
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: thehackerdispatch
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: thehackerdispatch
+          args: ["serve", "--mode=all"]
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: thehackerdispatch-config
+            - secretRef:
+                name: thehackerdispatch-secrets
+          # The HTTP server starts after migrations and the master bootstrap, so give startup room.
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          # The root filesystem stays writable: the master password file is written to /tmp.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

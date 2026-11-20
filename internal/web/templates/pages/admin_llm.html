@@ -1,0 +1,111 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+
+<h1>Stages</h1>
+{{if not .Models -}}
+<p class="empty">Add a provider and a model below, then choose which models each stage uses. Until then, curation is paused.</p>
+{{- else -}}
+<form class="stacked" method="post" action="/admin/llm/stages">
+  {{$models := .Models}}{{$efforts := .Efforts}}
+  {{range .Stages -}}
+  <fieldset>
+    <legend>{{.Label}}</legend>
+    {{$stage := .}}
+    {{range $i, $selected := .Slots -}}
+    <label>{{if eq $i 0}}Primary model{{else}}Fallback {{$i}}{{end}}
+      <select name="{{$stage.Name}}_model_{{add $i 1}}">
+        <option value="0">none</option>
+        {{range $models}}<option value="{{.ID}}"{{if eq .ID $selected}} selected{{end}}>{{.Label}}</option>{{end}}
+      </select>
+    </label>
+    {{- end}}
+    <label>Effort <span class="meta">(mapped to the provider's reasoning setting; default sends nothing)</span>
+      <select name="{{.Name}}_effort">
+        {{range $efforts}}<option value="{{.}}"{{if eq . $stage.Effort}} selected{{end}}>{{if .}}{{.}}{{else}}provider default{{end}}</option>{{end}}
+      </select>
+    </label>
+  </fieldset>
+  {{- end}}
+  <div class="buttons"><button type="submit">Save stages</button></div>
+</form>
+{{- end}}
+
+<h1>Usage (last 24 hours)</h1>
+{{if not .Usage}}<p class="empty">No calls yet.</p>{{else -}}
+<table class="admin">
+  <thead><tr><th>Stage</th><th>Calls</th><th>Failed</th></tr></thead>
+  <tbody>{{range .Usage}}<tr><td>{{.Stage}}</td><td>{{.Calls}}</td><td>{{.Failed}}</td></tr>{{end}}</tbody>
+</table>
+{{- end}}
+
+<h1>Models</h1>
+{{with .Models -}}
+<table class="admin">
+  <thead><tr><th>Model</th><th>JSON schema</th><th></th></tr></thead>
+  <tbody>
+    {{range . -}}
+    <tr{{if not .Enabled}} class="disabled"{{end}}>
+      <td>{{.Label}}</td>
+      <td>{{if .SupportsJSONSchema}}yes{{else}}no{{end}}</td>
+      <td class="buttons">
+        <button class="link" type="button" hx-post="/admin/llm/models/{{.ID}}/test" hx-target="#test-{{.ID}}" hx-indicator="#test-{{.ID}}">test</button>
+        <button class="link" type="button" hx-post="/admin/llm/models/{{.ID}}/delete" hx-confirm="Delete {{.Label}}?">delete</button>
+        <span id="test-{{.ID}}"><span class="htmx-indicator meta">calling…</span></span>
+      </td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{if .Providers -}}
+<form class="stacked" method="post" action="/admin/llm/models">
+  <fieldset>
+    <legend>Add a model</legend>
+    <label>Provider
+      <select name="provider_id" required>{{range .Providers}}<option value="{{.ID}}">{{.Name}}</option>{{end}}</select>
+    </label>
+    <label>Model id <span class="meta">(exactly as the provider names it, e.g. claude-sonnet-5-5, gpt-5-mini, gemini-3-flash)</span>
+      <input type="text" name="model_id" required maxlength="100">
+    </label>
+    <label class="check"><input type="checkbox" name="supports_json_schema" checked> Supports JSON schema (structured outputs)</label>
+    <div class="buttons"><button type="submit">Add model</button></div>
+  </fieldset>
+</form>
+{{- end}}
+
+<h1>Providers</h1>
+{{with .Providers -}}
+<table class="admin">
+  <thead><tr><th>Name</th><th>Type</th><th>Base URL</th><th>API key</th><th></th></tr></thead>
+  <tbody>
+    {{range . -}}
+    <tr>
+      <td>{{.Name}}</td><td>{{.Type}}</td><td>{{.BaseURL}}</td><td>…{{.APIKeyLast4}}</td>
+      <td><button class="link" type="button" hx-post="/admin/llm/providers/{{.ID}}/delete"
+          hx-confirm="Delete {{.Name}} and its models?">delete</button></td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+<form class="stacked" method="post" action="/admin/llm/providers">
+  <fieldset>
+    <legend>Add a provider</legend>
+    <label>Name <input type="text" name="name" required maxlength="60"></label>
+    <label>Type
+      <select name="type">{{range .Types}}<option value="{{.}}">{{.}}</option>{{end}}</select>
+    </label>
+    <label>Base URL <span class="meta">(only for openai-compatible; e.g. Gemini: https://generativelanguage.googleapis.com/v1beta/openai/,
+      OpenRouter: https://openrouter.ai/api/v1)</span>
+      <input type="url" name="base_url">
+    </label>
+    <label>API key <span class="meta">(stored encrypted; never shown again)</span>
+      <input type="password" name="api_key" required autocomplete="off">
+    </label>
+    <div class="buttons"><button type="submit">Add provider</button></div>
+  </fieldset>
+</form>
+{{- end}}
+{{- end}}

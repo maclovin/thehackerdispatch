@@ -1,0 +1,22 @@
+{{define "content" -}}
+{{with .Content -}}
+<div class="login">
+  <h1>Sign in</h1>
+  {{with .Error}}<p class="notice error" role="alert">{{.}}</p>{{end}}
+  {{if .SSO -}}
+  <a class="button primary sso" href="/auth/sso?next={{.Next}}">Sign in with SSO</a>
+  <p class="meta">Or, for accounts with a password:</p>
+  {{- end}}
+  <form class="stacked" method="post" action="/login">
+    <input type="hidden" name="next" value="{{.Next}}">
+    <label>Email
+      <input type="text" name="login" value="{{.Login}}" autocomplete="username" required>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <div class="buttons"><button type="submit">Sign in</button></div>
+  </form>
+</div>
+{{- end}}
+{{- end}}

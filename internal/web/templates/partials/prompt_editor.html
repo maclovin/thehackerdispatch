@@ -1,0 +1,29 @@
+{{define "prompt_editor" -}}
+{{if .Saved}}<p class="notice ok" role="status">Saved. This is now version {{.Current.Version}}.</p>{{end}}
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked wide" method="post" action="{{.Action}}">
+  <label>Prompt
+    <span class="meta">{{if .Current.Version}}version {{.Current.Version}}, saved by {{.Current.Author}} {{since .Current.CreatedAt}}{{else}}{{.Unsaved}}{{end}}</span>
+    <textarea class="prompt" name="body" maxlength="20000">{{.Body}}</textarea>
+  </label>
+  <div class="buttons"><button class="primary" type="submit">Save as a new version</button>
+    <span class="meta">Takes effect on the next curation run and the next post written.</span></div>
+</form>
+{{with .History -}}
+<h2>History</h2>
+<table class="admin">
+  <thead><tr><th>Version</th><th>Saved by</th><th>When</th><th></th></tr></thead>
+  <tbody>
+    {{range .}}
+    <tr>
+      <td><details><summary>version {{.Version}}</summary>{{if .Body}}<pre class="prompt">{{.Body}}</pre>{{else}}<p class="meta">(empty)</p>{{end}}</details></td>
+      <td>{{.Author}}</td>
+      <td>{{since .CreatedAt}}</td>
+      <td>{{if eq .Version $.Current.Version}}<span class="meta">current</span>{{else}}
+        <form class="inline" method="post" action="/admin/prompts/{{.ID}}/restore"><button class="link" type="submit">restore</button></form>{{end}}</td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{- end}}

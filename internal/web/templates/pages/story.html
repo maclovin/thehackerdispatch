@@ -1,0 +1,42 @@
+{{define "content" -}}
+{{with .Content -}}
+<article class="story">
+  <h1>{{if .Critical}}<span class="badge">critical</span> {{end}}{{.Title}}</h1>
+  <p class="meta">
+    {{.Section}} | {{since .PublishedAt}} | {{expiresIn .ExpiresAt}}
+    {{if not .Model}}| automatic summary unavailable, showing the feed's text{{end}}
+  </p>
+
+  <div class="summary">{{.Summary}}</div>
+
+  {{with .WhyItMatters}}<p class="why"><strong>Why it matters:</strong> {{.}}</p>{{end}}
+
+  {{with .Updates -}}
+  <h2 class="section-title">Updates</h2>
+  <ul class="plain">
+    {{range .}}<li><span class="meta">{{since .CreatedAt}}</span> {{.Note}}{{with .URL}} <a href="{{.}}" target="_blank" rel="noopener noreferrer">source</a>{{end}}</li>{{end}}
+  </ul>
+  {{- end}}
+
+  <h2 class="section-title">Sources</h2>
+  <ul class="plain">
+    {{range .Links}}<li><a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.Title}}</a>{{with .Source}} <span class="meta">({{.}})</span>{{end}}</li>{{end}}
+  </ul>
+
+  <h2 class="section-title" id="comments">Discussion{{with .Comments}} ({{.}}){{end}}</h2>
+  <form class="stacked" method="post" action="/s/{{.ID}}/comments">
+    {{with .Form.Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+    {{if .Form.ParentID}}<input type="hidden" name="parent" value="{{.Form.ParentID}}">{{end}}
+    <textarea name="body" required maxlength="5000" aria-label="Your comment">{{.Form.Draft}}</textarea>
+    <div class="buttons"><button class="primary" type="submit">Add comment</button>
+      <span class="meta">Markdown: **bold**, *italics*, `code`, lists and links.</span></div>
+  </form>
+
+  {{with .Thread -}}
+  <ul class="comments">
+    {{range .}}{{template "comment" .}}{{end}}
+  </ul>
+  {{- end}}
+</article>
+{{- end}}
+{{- end}}

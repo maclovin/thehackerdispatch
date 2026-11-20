@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: thehackerdispatch
+  labels:
+    app.kubernetes.io/name: thehackerdispatch
+spec:
+  selector:
+    app.kubernetes.io/name: thehackerdispatch
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

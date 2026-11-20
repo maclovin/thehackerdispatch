@@ -1,0 +1,8 @@
+{{define "vote" -}}
+<form class="vote" method="post" action="/c/{{.CommentID}}/vote" hx-post="/c/{{.CommentID}}/vote" hx-target="this" hx-swap="outerHTML">
+  {{if .CanVote}}<button type="submit" name="value" value="{{.UpValue}}"{{if eq .MyVote 1}} class="on"{{end}} aria-label="upvote">▲</button>{{end}}
+  <span class="points" title="votes">{{.Points}}</span>
+  {{if .CanVote}}<button type="submit" name="value" value="{{.DownValue}}"{{if eq .MyVote -1}} class="on"{{end}} aria-label="downvote">▼</button>{{end}}
+  {{with .Error}}<span class="error">{{.}}</span>{{end}}
+</form>
+{{- end}}

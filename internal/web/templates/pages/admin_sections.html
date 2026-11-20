@@ -1,0 +1,44 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+<h1>Sections</h1>
+{{with .Content -}}
+<table class="admin">
+  <thead>
+    <tr><th>Name</th><th>Slug</th><th>Sources</th><th>Stories</th><th>Prompt</th><th>Slack</th><th>Order</th></tr>
+  </thead>
+  <tbody>
+    {{$last := len .Sections}}
+    {{range $i, $sec := .Sections -}}
+    <tr>
+      <td><a href="/admin/sections/{{.ID}}">{{.Name}}</a></td>
+      <td><code>{{.Slug}}</code></td>
+      <td>{{.Sources}}</td>
+      <td>{{.Stories}}</td>
+      <td>{{if .HasPrompt}}version {{.PromptVersion}}{{else}}<span class="meta">global only</span>{{end}}</td>
+      <td>{{with .ChannelName}}{{.}}{{else}}<span class="meta">none</span>{{end}}</td>
+      <td>
+        <form class="inline" method="post" action="/admin/sections/{{.ID}}/move">
+          <button class="link" type="submit" name="dir" value="up"{{if eq $i 0}} disabled{{end}}>up</button>
+          <button class="link" type="submit" name="dir" value="down"{{if eq (add $i 1) $last}} disabled{{end}}>down</button>
+        </form>
+      </td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+
+<h2>Add a section</h2>
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked" method="post" action="/admin/sections">
+  <div class="row">
+    <label>Name <span class="meta">shown on the board</span>
+      <input type="text" name="name" value="{{.Input.Name}}" maxlength="40" required>
+    </label>
+    <label>Slug <span class="meta">used in links; can't be changed later</span>
+      <input type="text" name="slug" value="{{.Input.Slug}}" maxlength="30" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="threat-intel" required>
+    </label>
+  </div>
+  <div class="buttons"><button class="primary" type="submit">Add section</button></div>
+</form>
+{{- end}}
+{{- end}}

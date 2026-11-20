@@ -1,0 +1,7 @@
+bin/
+deploy/
+compose.yaml
+*.md
+docs/
+.git/
+.github/

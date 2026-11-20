@@ -1,0 +1,75 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+<h1>Settings</h1>
+{{if .Saved}}<p class="notice ok" role="status">Saved.</p>{{end}}
+{{with .Errors}}<ul class="error" role="alert">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+<form class="stacked" method="post" action="/admin/settings">
+  <fieldset>
+    <legend>Sources</legend>
+    <label>Check the sources every
+      <select name="poll_interval_minutes">
+        {{$current := .Ingest.PollIntervalMinutes}}
+        {{range .PollIntervals}}<option value="{{.}}"{{if eq . $current}} selected{{end}}>{{if lt . 60}}{{.}} minutes{{else}}{{div . 60}} hour{{if gt . 60}}s{{end}}{{end}}</option>{{end}}
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Content</legend>
+    <label>Everything expires after
+      <select name="ttl_days">
+        {{$ttl := .Content.TTLDays}}
+        {{range .TTLDays}}<option value="{{.}}"{{if eq . $ttl}} selected{{end}}>{{if eq . 0}}never (forever){{else if eq . 1}}1 day{{else}}{{.}} days{{end}}</option>{{end}}
+      </select>
+      <span class="meta">Applies to what's already published too: shortening it deletes older stories right away.</span>
+    </label>
+    <div class="row">
+      <label>Stories per day, at most
+        <input type="number" name="daily_cap" min="1" max="100" value="{{.Content.DailyCap}}">
+      </label>
+      <label>Minimum score (0–100)
+        <input type="number" name="min_score" min="0" max="100" value="{{.Content.MinScore}}">
+      </label>
+      <label>Minutes between stories, at least
+        <input type="number" name="min_gap_minutes" min="0" max="720" value="{{.Content.MinGapMinutes}}">
+      </label>
+    </div>
+    <span class="meta">Stories are spread over the day, best first. A story waits when better ones are likely to come; whatever is still queued when the day ends is dropped. Critical stories go out right away and count toward the daily cap.</span>
+  </fieldset>
+
+  <fieldset>
+    <legend>Sign-in</legend>
+    <label>Company email domains <span class="meta">comma-separated, e.g. example.com, example.org. Every account except the master needs one of them, for SSO and passwords alike.</span>
+      <input type="text" name="allowed_domains" value="{{.Domains}}">
+    </label>
+    <div class="row">
+      <label>Session lifetime (hours)
+        <input type="number" name="session_lifetime_hours" min="1" max="720" value="{{.Auth.SessionLifetimeHours}}">
+      </label>
+      <label>Failed attempts before waiting
+        <input type="number" name="max_failed_logins" min="1" max="100" value="{{.Auth.MaxFailedLogins}}">
+      </label>
+      <label>Wait (minutes)
+        <input type="number" name="login_wait_minutes" min="1" max="1440" value="{{.Auth.LoginWaitMinutes}}">
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Branding</legend>
+    <label>Display name <input type="text" name="display_name" value="{{.Branding.DisplayName}}" maxlength="60"></label>
+    <div class="row">
+      <label>Primary color <input type="text" name="primary_color" value="{{.Branding.PrimaryColor}}" pattern="#[0-9a-fA-F]{6}"></label>
+      <label>Links, light <input type="text" name="link_color_light" value="{{.Branding.LinkColorLight}}" pattern="#[0-9a-fA-F]{6}"></label>
+      <label>Visited, light <input type="text" name="visited_color_light" value="{{.Branding.VisitedColorLight}}" pattern="#[0-9a-fA-F]{6}"></label>
+      <label>Links, dark <input type="text" name="link_color_dark" value="{{.Branding.LinkColorDark}}" pattern="#[0-9a-fA-F]{6}"></label>
+      <label>Visited, dark <input type="text" name="visited_color_dark" value="{{.Branding.VisitedColorDark}}" pattern="#[0-9a-fA-F]{6}"></label>
+    </div>
+    <span class="meta">Colors look like #1a2b3c. Everything else in the look is fixed.</span>
+  </fieldset>
+
+  <div class="buttons"><button class="primary" type="submit">Save</button></div>
+</form>
+{{- end}}
+{{- end}}

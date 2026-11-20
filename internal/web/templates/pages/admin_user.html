@@ -1,0 +1,67 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+{{with .Content -}}
+{{with .Account -}}
+<p class="meta"><a href="/admin/users">all users</a></p>
+<h1>{{with .Nickname}}{{.}}{{else}}(no nickname yet){{end}}</h1>
+{{end}}
+{{with .Error}}<p class="notice error" role="alert">{{.}}</p>{{end}}
+
+<table class="admin">
+  <tbody>
+    {{with .Account -}}
+    <tr><th>Person</th><td>{{if .IsMaster}}master account (break-glass){{else}}{{.RealName}} &lt;{{.Email}}&gt;{{end}}</td></tr>
+    <tr><th>Sign-in</th><td>{{if eq .AuthMode "sso"}}SSO{{else}}password{{if .MustRotate}} (temporary, not changed yet){{end}}{{end}}</td></tr>
+    <tr><th>Role</th><td>{{.Role}}</td></tr>
+    <tr><th>Status</th><td>{{if .Banned}}<strong>banned</strong>{{else}}active{{end}}</td></tr>
+    <tr><th>Created</th><td>{{since .CreatedAt}}</td></tr>
+    <tr><th>Last sign-in</th><td>{{ago .LastLoginAt}}</td></tr>
+    {{- end}}
+  </tbody>
+</table>
+
+{{if .Self -}}
+<p class="notice">This is your own account: change it from <a href="/account">your account page</a>.</p>
+{{- else -}}
+{{$id := .Account.ID}}
+<h2 class="section-title">Actions</h2>
+<div class="buttons">
+  {{/* Plain forms: these answer with a full page showing the generated password once. */}}
+  {{if eq .Account.AuthMode "local"}}
+  <form class="inline" method="post" action="/admin/users/{{$id}}/reset">
+    <button type="submit">Reset password</button></form>
+  {{end}}
+  {{if not .Account.IsMaster -}}
+  <form class="inline" method="post" action="/admin/users/{{$id}}/mode">
+    <input type="hidden" name="mode" value="{{if eq .Account.AuthMode "local"}}sso{{else}}local{{end}}">
+    <button type="submit">{{if eq .Account.AuthMode "local"}}Switch to SSO{{else}}Switch to password{{end}}</button></form>
+  <form class="inline" method="post" action="/admin/users/{{$id}}/role">
+    <input type="hidden" name="role" value="{{if eq .Account.Role "admin"}}member{{else}}admin{{end}}">
+    <button type="submit">{{if eq .Account.Role "admin"}}Demote to member{{else}}Promote to admin{{end}}</button></form>
+  <form class="inline" method="post" action="/admin/users/{{$id}}/ban">
+    <input type="hidden" name="banned" value="{{not .Account.Banned}}">
+    <button type="submit">{{if .Account.Banned}}Unban{{else}}Ban{{end}}</button></form>
+  <button type="button" class="danger" hx-post="/admin/users/{{$id}}/delete"
+          hx-confirm="Delete this account? Their comments become [deleted].">Delete</button>
+  {{- end}}
+</div>
+{{- end}}
+
+<h2 class="section-title">Sessions</h2>
+{{if not .Sessions}}<p class="empty">No open sessions.</p>{{else -}}
+<table class="admin">
+  <thead><tr><th>Browser</th><th>IP</th><th>Signed in</th><th>Last seen</th><th></th></tr></thead>
+  <tbody>
+    {{$back := printf "/admin/users/%d" .Account.ID}}
+    {{range .Sessions -}}
+    <tr>
+      <td>{{.UserAgent}}</td><td>{{.IP}}</td><td>{{since .CreatedAt}}</td><td>{{since .LastSeenAt}}</td>
+      <td><form class="inline" method="post" action="/account/sessions/{{.ID}}/end"><input type="hidden" name="back" value="{{$back}}">
+        <button class="link" type="submit">sign out</button></form></td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{- end}}
+{{- end}}

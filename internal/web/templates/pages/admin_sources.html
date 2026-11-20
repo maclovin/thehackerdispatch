@@ -1,0 +1,36 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+<h1>Sources
+  <a class="button" href="/admin/sources/new">Add source</a>
+  <a class="button" href="/admin/sources/import">Import OPML</a>
+  <form class="inline" method="post" action="/admin/sources/fetch"><button type="submit">Fetch all now</button></form>
+</h1>
+{{with .Content -}}
+{{if not .Sources -}}
+<p class="empty">No sources yet.</p>
+{{- else -}}
+<table class="admin">
+  <thead>
+    <tr><th>Name</th><th>Section</th><th>Last fetch</th><th>Status</th><th>Items (48h)</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{range .Sources -}}
+    <tr{{if not .Enabled}} class="disabled"{{end}}>
+      <td><a href="/admin/sources/{{.ID}}">{{.Name}}</a><div class="meta">{{.URL}}</div></td>
+      <td>{{.SectionName}}</td>
+      <td>{{ago .LastFetchAt}}</td>
+      <td>{{if not .Enabled}}<strong>disabled</strong> {{end}}{{.LastStatus}}</td>
+      <td>{{.ItemsLast48h}}</td>
+      <td>
+        <form method="post" action="/admin/sources/{{.ID}}/enabled">
+          <input type="hidden" name="enabled" value="{{not .Enabled}}">
+          <button class="link" type="submit">{{if .Enabled}}disable{{else}}enable{{end}}</button>
+        </form>
+      </td>
+    </tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}
+{{- end}}
+{{- end}}

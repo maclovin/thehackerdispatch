@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -51,8 +52,12 @@ type Deps struct {
 
 type Server struct {
 	Deps
-	pages *renderer
+	pages    *renderer
+	draining atomic.Bool
 }
+
+// Drain makes /readyz fail, so Kubernetes stops routing traffic here before the server stops.
+func (s *Server) Drain() { s.draining.Store(true) }
 
 func NewServer(deps Deps) (*Server, error) {
 	pages, err := newRenderer()
@@ -116,6 +121,10 @@ func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleReadyz(w http.ResponseWriter, r *http.Request) {
+	if s.draining.Load() {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "shutting down"})
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 	if err := s.Pool.Ping(ctx); err != nil {

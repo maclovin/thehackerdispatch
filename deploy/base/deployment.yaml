@@ -8,6 +8,12 @@ spec:
   # One replica runs everything (--mode=all). More replicas are safe: background jobs and
   # migrations are guarded by PostgreSQL advisory locks.
   replicas: 1
+  # The new pod must be ready before the old one stops, so restarts cause no downtime.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: thehackerdispatch

@@ -41,8 +41,13 @@ var (
 	commit  = "none"
 )
 
-// shutdownTimeout stays under Kubernetes' default 30s termination grace period.
-const shutdownTimeout = 25 * time.Second
+const (
+	// drainDelay lets Kubernetes take the pod out of the Service before connections are refused.
+	drainDelay = 5 * time.Second
+
+	// drainDelay + shutdownTimeout stays under Kubernetes' default 30s termination grace period.
+	shutdownTimeout = 20 * time.Second
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -230,6 +235,8 @@ func serve(ctx context.Context, args []string, getenv func(string) string, stdou
 	g.Go(func() error {
 		<-gctx.Done()
 		logger.Info("shutting down")
+		srv.Drain()
+		time.Sleep(drainDelay)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 		return httpServer.Shutdown(shutdownCtx)
